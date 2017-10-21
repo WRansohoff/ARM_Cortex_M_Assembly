@@ -2,7 +2,7 @@
 
 This is a basic 'hello, world' program written in assembly for an ARM-Cortex-M0+ microcontroller, specifically the (very cheap) STM32F030.
 
-This particular example is adapted from a tutorial written by Martin HubÃ¡Äe, which can be viewed here:
+This particular example is adapted from a tutorial written by Martin Hubáček, which can be viewed here:
 
 http://www.martinhubacek.cz/arm/arm-cortex-bare-metal-assembly/stm32f0-cortex-m0-bare-metal-assembly
 
