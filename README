@@ -1,0 +1,7 @@
+# ARM Cortex-M Assembly Tutorials
+
+These folders each contain their own README files, but the gist is that I feel like there's not very much information on getting started with programming these microprocessors, and I feel like assembly isn't a bad way to learn. It might even be a good way to teach general programming, since you can introduce the idea of a program as a list of instructions straight-away.
+
+Anyways, a lot of minimal C examples which are available have big chunks of confusing 'magic' code and numbers, so hopefully these examples can help break those concepts down.
+
+Not everything written here is guaranteed to be accurate; I'm just going off of my understanding as I learn more about these Cortex-M processors. Let me know if I get stuff wrong!
