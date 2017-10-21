@@ -1,0 +1,17 @@
+# Hello, ARM Assembly!
+
+This is a basic 'hello, world' program written in assembly for an ARM-Cortex-M0+ microcontroller, specifically the (very cheap) STM32F030.
+
+This particular example is adapted from a tutorial written by Martin HubÃ¡Äe, which can be viewed here:
+
+http://www.martinhubacek.cz/arm/arm-cortex-bare-metal-assembly/stm32f0-cortex-m0-bare-metal-assembly
+
+I've had a bit of trouble finding good resources on writing simple programs for Cortex-M processors, which is too bad because they're really cool. So I figured that I would collect a series of basic examples, starting with the very basics and going through core concepts one-by-one. These will be available under the MIT license, unless some dependency restricts that. In this case, my source used the same license!
+
+I think that these 32-bit ARM processors have a lot of promise for teaching electronics and coding, and getting people interested in tech stuff. The core concept of an assembly program is fairly simple and easy to teach, and it can get people used to the sort of step-by-step logic needed to program computers while letting them see cool results like LEDs and robots in the real world.
+
+As a bonus, there are only a few dozen instructions in the basic "Thumb" instruction set used by these small ARM processors, and unlike with 8-bit AVR microprocessors, the concepts can then be applied to more complex Cortex-M4F processors, which have a larger set of instructions including floating-point operations, DSP, and a broad peripheral set up to and including basic 2D graphics accelerators!
+
+So let's get started. This program is 12 bytes, and will increment a single register. I was going to write a blog post for this intro program, but Martin's writeup already explains the concepts used here very well, and the program IS only 12 bytes long.
+
+I'll start writing better documentation with the next example, which will walk through these chips' "vector tables," which tell them what code to execute when different types of hardware interrupts occur - this example just fills in the first two entries, which say how much RAM the chip has, and the "reset handler" which is run on a system reset - and how to use an external crystal oscillator to set up a precise system tick. The example after that will go over using that tick to produce precisely-timed delays, and THEN we'll go over the popular WS2812 'neopixel' LED driver :)
