@@ -60,7 +60,7 @@ reset_handler:
     MOV  sp, r0
 
     // Copy data from flash to RAM data init section.
-    // R2 will store our progress along the sidata section.
+    // R0 will store our progress along the sidata section.
     MOVS r0, #0
     // Load the start/end addresses of the data section,
     // and the start of the data init section.
