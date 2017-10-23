@@ -138,24 +138,24 @@ main:
     BL   read_mod_and_write
 
     // (Infinite 'blink' loop)
+    LDR  r3, =0x000001F4 // (500 ms delay value)
     // Use the ODR register to set/reset pin 1.
-    LDR  r3, =0x48000014
+    LDR  r4, =0x48000014
     // 'Set' OR mask.
-    LDR  r4, =0x00000002
+    LDR  r5, =0x00000002
     // 'Reset' AND mask.
-    LDR  r5, =0xFFFFFFFD
+    LDR  r6, =0xFFFFFFFD
     main_loop:
         // Turn the LED on, wait a bit.
-        LDR  r6, [r3]
-        ORRS r6, r6, r4
-        STR  r6, [r3]
-        LDR  r0, =0x000001F4 // (500)
+        LDR  r7, [r4]
+        ORRS r7, r7, r5
+        STR  r7, [r4]
         BL   delay_ms
         // Turn the LED off, wait a bit.
-        LDR  r6, [r3]
-        ANDS r6, r6, r5
-        STR  r6, [r3]
-        LDR  r0, =0x000001F4 // (500)
+        LDR  r7, [r4]
+        ANDS r7, r7, r6
+        STR  r7, [r4]
         BL   delay_ms
+        // Loop back.
         B    main_loop
 .size main, .-main

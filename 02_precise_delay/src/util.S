@@ -10,6 +10,9 @@
 .fpu softvfp
 .thumb
 
+// Instead of #include'ing this file everywhere, we can
+// just declare the methods 'global' and make sure our
+// Makefile compiles/links with this source file.
 .global read_mod_orr_write
 .global read_mod_and_write
 .global delay_us
@@ -71,6 +74,14 @@ delay_us:
         // 4 instructions to subtract 1x us and check if done.
         // 44x instructions executing a 4-instruction loop
         // 11 times. Each 48 cycles is a us 'step'.
+        /*
+         * NOTE/TODO: This is not totally accurate!!
+         * It turns out that 'branch' instructions take
+         * 2 cycles, not 1, but only if they do take the branch.
+         * So, 'BEQ' is 1 cycle if it does not branch, 2 if
+         * it does. That means that this timing is slightly off.
+         * But hey, it's close enough for government work.
+         */
         MOVS r2, #44
         SUBS r1, r1, #1
         CMP  r1, #0
@@ -88,9 +99,9 @@ delay_us:
 /*
  * Delay a given number of milliseconds.
  * Expects:
- *  r0 contains the number of milliseconds to wait.
+ *  r3 contains the number of milliseconds to wait.
  * Writes:
- *  r0 increased by a factor of 100.
+ *  r0 stores how many us to wait.
  *  r1 used to store progress.
  *  r2 used to store a scaling value based on clock frequency.
  */
@@ -99,6 +110,7 @@ delay_ms:
     PUSH { lr }
     // 1ms = 1000x 1us delay cycles. ...About...
     LDR  r1, =0x000003E8 // (1000)
+    MOV  r0, r3
     MULS r0, r0, r1
     BL   delay_us
     POP  { pc }
