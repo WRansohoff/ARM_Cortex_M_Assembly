@@ -1,0 +1,19 @@
+# Cortex-M4F Initialization
+
+# Important notice
+
+This example is still under construction. I think it should work, but I've noticed a few issues. Like, the STM32F303K8 nucleo boards don't ship with a high-speed crystal oscillator connected, so it'll get stuck waiting for the HSE signal to stabilize if you run it on one of those boards. I guess that's sort of my fault for using 'clock the chip up to its maximum speed' as a first example...
+
+Also, I only just figured out that I was writing the wrong bits to the FLASH_ACR register which caused the chip to refuse new program uploads if it reached that point in executing the program...that made it sort of annoying to upload a fix, so please do double-check the registers and values in ST's datasheets if you're going to try this as an STM32F303 assembly initialization tutorial. See that 'no warranty of any kind' part of the license file :)
+
+# Overview
+
+Now that we have the hang of things, we can initialize different sorts of chip. The Cortex-M4F core is much more capable than the Cortex-M0+. It can perform floating-point operations using hardware commands, often has a higher clock frequency, and more advanced peripherals support.
+
+The next example should work on either a Cortex-M0+ or Cortex-M4F chip. But once you get an LCD working, you're going to want things like floating-point numbers, signal processing functionality, a RealTime Clock which can run on backup power while the machine is off...okay, that last one is probably supported by a number of larger M0 chips too. But still.
+
+This example will be designed for the STM32F303K8 chip. Why? Because you can get a tiny pre-made "Nucleo" board with onboard debugger for $11 plus shipping. There is also one for the STM32F042 chip, which is similar to the F030 chip of the previous tutorials, but while I'm hoping to add support for that board in the future, this tutorial will support store-bought hardware out of the box!
+
+So, we'll go back to a basic 'blink' example with boot logic on reset and a vector table containing peripheral entries for all of the F3 chip's peripherals. This is a pretty small (32-pin) F3 chip though, so there still aren't THAT many.
+
+(Usually, chips with more pins are larger, which I guess gives them more space to put silicon features and dissipate power. But more importantly, each pin can only have a handful of alternate functions each, so more pins means more peripherals. For example, one common peripheral is the Flexible Static Memory Controller, which lets you configure an interface designed for talking to external storage, RAM, or even LCDs that use a parallel interace. But it is only available on chips with more than 100 pins, because its configuration requires a lot of data pins, since large banks of RAM tend to use interfaces which use many pins to send/receive as much data as possible in a single cycle.)

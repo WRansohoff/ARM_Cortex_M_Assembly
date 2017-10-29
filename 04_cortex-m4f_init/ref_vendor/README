@@ -1,0 +1,9 @@
+# Vendor reference files
+
+This is a small selection of the 'vendor-provided' files from ST. They are really useful for double-checking your register values, peripheral initialization logic, etc.
+
+Note that they have their own licenses, which are generally included at the top of the files so they can be redistributed like this. The licenses are fairly permissive, but they are not quite Free Software - if you upload the libraries/includes/etc to chips not manufactured by ST, you're violating the license. Presumably this is to discourage people from using them with compatible knock-off lines like the 'GD32' microprocessors. Still, those are popular enough now that I'm sure GigaDevice provides their own documentation.
+
+The files here are from their 'F30x' standard peripheral files, although they technically also cover F334 chips. The The F303 is what I'll be using, as it is their general-purpose high-performance F3xx mainline chip. I think there are lots of small differences, but tl;dr F303s can run at clock speeds up to 72MHz, F302s up to 48MHz, F301s up to 24MHz.
+
+Anyways, I only included files relevant to what I'll be looking at in the next few examples; you can find the full (and pretty large) peripherals library at www.st.com - their URL structure is ugly, so I'll just use their own 'part number' for the file: "STSW-STM32108"
