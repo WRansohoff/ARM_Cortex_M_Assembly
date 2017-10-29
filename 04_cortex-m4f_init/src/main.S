@@ -72,7 +72,7 @@ reset_handler:
 main:
     // Infinite 'set/increment' loop to signal that we have
     // reached the end of the program.
-    LDR  r1, 0xF00D
+    LDR  r1, =0xF00D
     MOVS r0, #0
     main_loop:
         ADDS r0, r0, #1
