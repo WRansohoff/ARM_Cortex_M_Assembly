@@ -6,10 +6,10 @@ ENTRY( reset_handler )
 _estack = 0x20001000;
 
 /* Define minimum heap/stack sizes. */
-/* 16B Heap */
-_Min_Heap_Size = 0x8;
-/* 16B Stack */
-_Min_Stack_Size = 0x8;
+/* 2KB Heap */
+_Min_Heap_Size = 0x800;
+/* 512B Stack */
+_Min_Stack_Size = 0x200;
 
 MEMORY
 {
@@ -117,8 +117,10 @@ SECTIONS
     ._heap :
     {
         . = ALIGN(4);
+        _sheap = .;
         . = . + _Min_Heap_Size;
         . = ALIGN(4);
+        _eheap = .;
     } >RAM
     ._stack :
     {

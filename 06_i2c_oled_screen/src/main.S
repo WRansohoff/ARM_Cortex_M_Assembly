@@ -1,26 +1,9 @@
 /*
- * Test program to turn on the HSE oscillator.
- *
- * Uses a full vector table/etc initialization and startup.
- * Built from a combination of ST's example startup files,
- * poring over datasheets/references, and google/blog posts.
- *
- * But it should be easy to adapt to any manufacturer; a lot
- * of this is common to Cortex-M processors, nevermind Cortex-M0.
- * You'd just need to adjust the code surrounding peripherals;
- * that'll be in the datasheets, and you can verify your
- * addresses/values in peripheral library files if the vendor
- * provides them.
+ * Test program to use an SSD1306 monochrome OLED screen.
  *
  * Copyright William Ransohoff, Vivonomicon, LLC, 2017
  *
  * Open source under the MIT License
- */
-
-/*
- * For 128x64 SSD1306 OLED screen. 1bpp = 8192 bits = 1024 Bytes
- * We'll have at least 4KB SRAM, so let's reserve:
- * [0x20000C00 : 0x20001000] for the framebuffer.
  */
 
 // The linker should set these, but you never know.
@@ -50,6 +33,9 @@
 // Start / end of .bss section.
 .word _sbss
 .word _ebss
+// Start/end of heap section
+.word _sheap
+.word _eheap
 
 /*
  * The Reset handler. Called on reset.
@@ -153,12 +139,18 @@ main:
     // I'm not going to use that mask though...it's in the
     // standard peripheral library, but the datasheet says that
     // TIMINGR[27:24] are reserved.
-    // Checking the reference manual, this should be 100KHz@48MHz
     LDR  r0, =0x40005410
     LDR  r2, =0x0F000000
     BL   read_mod_and_write
     //LDR  r2, =0x00210507
-    LDR  r2, =0xB042130F
+    // Should be 1MHz@48MHz ('fast mode+')
+    LDR  r2, =0x50100103
+    // Should be 400KHz@48MHz ('fast mode')
+    //LDR  r2, =0x50330309
+    // Checking the reference manual, this should be 100KHz@48MHz
+    //LDR  r2, =0xB0420F13
+    // Checking the reference manual, this should be 10KHz@48MHz
+    //LDR  r2, =0xB042C3C7
     BL   read_mod_orr_write
     /* (Own Address 1 config could go here; not used.) */
     /* (Enable the I2C Peripheral? Moved below) */
@@ -186,8 +178,8 @@ main:
     // (Command: 0xD5, and apparently the arg is cmd not dat.)
     LDR  r3, =0x000000D5
     BL   i2c_send_command
-    //LDR  r3, =0x00000080
-    LDR  r3, =0x000000F0
+    LDR  r3, =0x00000080
+    //LDR  r3, =0x000000F0
     BL   i2c_send_command
     // 'Set Multiplex' command: 0xA8, recommended 0x3F (1:64)
     LDR  r3, =0x000000A8
@@ -215,7 +207,7 @@ main:
     BL   i2c_send_command
     LDR  r3, =0x00000000
     // ...and '10' means 'page addressing mode'.
-    LDR  r3, =0x00000010
+    //LDR  r3, =0x00000010
     BL   i2c_send_command
     // 'SEGREMAP' of 0x1. (|| with command 0xA0) Uh...I dunno.
     LDR  r3, =0x000000A1
@@ -232,21 +224,21 @@ main:
     // use value of 0xCF.
     LDR  r3, =0x00000081
     BL   i2c_send_command
-    //LDR  r3, =0x000000CF
-    LDR  r3, =0x000000FF
+    LDR  r3, =0x000000CF
+    //LDR  r3, =0x000000FF
     BL   i2c_send_command
     // 'Set Precharge' command: 0xD9. With internal charge pump,
     // use value of 0xF1.
     LDR  r3, =0x000000D9
     BL   i2c_send_command
-    //LDR  r3, =0x000000F1
-    LDR  r3, =0x00000022
+    LDR  r3, =0x000000F1
+    //LDR  r3, =0x00000022
     BL   i2c_send_command
     // 'Set VCOM Detect' command: 0xDB, recommended 0x40?
     LDR  r3, =0x000000DB
     BL   i2c_send_command
-    //LDR  r3, =0x00000040
-    LDR  r3, =0x00000020
+    LDR  r3, =0x00000040
+    //LDR  r3, =0x00000020
     BL   i2c_send_command
     // 'DISPLAYALLON_RESUME' command: 0xA4
     // (Output follows RAM content)
@@ -257,72 +249,87 @@ main:
     LDR  r3, =0x000000A6
     BL   i2c_send_command
     // Set Page start address.
-    LDR  r3, =0x000000B0
-    BL   i2c_send_command
+    //LDR  r3, =0x000000B0
+    //BL   i2c_send_command
     // Set high column address.
+    /*
     LDR  r3, =0x00000010
     BL   i2c_send_command
     // Set low column address.
     LDR  r3, =0x00000001
     BL   i2c_send_command
+    */
     // 'Display On' command: 0xAF
     LDR  r3, =0x000000AF
     BL   i2c_send_command
 
-    /* Fill the screen? */
-    // Now, in a single I2C transmission, write one 128B page
-    // simply like, '0x40 / 0xdat / 0xdat / 0xdat / ...'
-    // No need for interleaved 'DAT/CMD' bytes. 8 pages total.
-    // Do this for all 64 rows.
-    // # of pages left.
-    MOVS r5, #8
-    send_oled_row:
-        // Send 'page-writing' init commands.
-        // Set r0 to I2Cx_[CR1] base
-        LDR  r0, =0x40005400
-        LDR  r2, =0x000000B0
-        SUBS r2, r2, r5
-        ADDS r2, r2, #8
-        BL   i2c_send_command
-        LDR  r2, =0x00000000
-        BL   i2c_send_command
-        LDR  r2, =0x00000010
-        BL   i2c_send_command
-        // # of bytes to send per row. (0-indexed)
-        MOVS r4, #128
-        // Set r0 to I2Cx_CR2
-        ADDS r0, r0, #4
-        LDR  r2, =0x78
-        BL   i2c_set_saddr
-        ADDS r2, r4, #1
-        BL   i2c_num_bytes_to_send
-        BL   i2c_send_start
-        // Reset r0 to I2Cx_base
-        SUBS r0, r0, #4
-        LDR  r2, =0x00000040
-        BL   i2c_send_byte
-        SUBS r4, r4, #1
-        send_oled_row_bits:
-            LDR  r2, =0x000000FF
-            BL   i2c_send_byte
-            SUBS r4, r4, #1
-            BNE  send_oled_row_bits
-        BL   i2c_send_last_byte
-        // Set r0 to I2Cx_CR2
-        ADDS r0, r0, #4
-        BL   i2c_send_stop
-        // Reset r0 to I2Cx_base
-        SUBS r0, r0, #4
-        SUBS r5, r5, #1
-        BNE  send_oled_row
-    // And we're done.
-    i2c_screen_write_finished:
-
+    oled_init_done:
     // Infinite 'set/increment' loop to signal that we have
     // reached the end of the program.
-    LDR  r1, =0xF00D
+    //LDR  r1, =0xF00D
+    // Flash the screen back and forth.
+    //LDR  r3, =0x000003E8
+    //LDR  r4, =0xFFFFFFFF
+    LDR  r4, =0x00000000
+    MOVS r0, r4
+    BL   clear_oled_framebuffer
+    LDR  r3, =0x00000001
+    BL   draw_smiley_face
+    // Draw a test outline-d rectangle.
+    MOVS r0, #10
+    MOVS r1, #10
+    MOVS r2, #1
+    MOVS r3, #0
+    MOVS r4, #4
+    MOVS r5, #8
+    BL   i2c_draw_rect
+    // Draw a test filled rectangle.
+    MOVS r0, #110
+    MOVS r1, #50
+    MOVS r2, #1
+    MOVS r3, #1
+    MOVS r4, #5
+    MOVS r5, #20
+    BL   i2c_draw_rect
     MOVS r0, #0
+    MOVS r1, #6
+    MOVS r3, #1
+    LDR  r2, =_sheap
+    // (Add 1KB, for end of framebuffer.)
+    LDR  r3, =0x00000400
+    ADDS r2, r2, r3
+    // And then put a test string there.
+    MOVS r3, #72        // 'H'
+    MOVS r4, #101       // 'e'
+    LSLS r3, r3, #8
+    ORRS r3, r3, r4
+    MOVS r4, #108       // 'l'
+    LSLS r3, r3, #8
+    ORRS r3, r3, r4
+    MOVS r4, #108       // 'l'
+    LSLS r3, r3, #8
+    ORRS r3, r3, r4
+    STR  r3, [r2]
+    ADDS r2, r2, #4
+    MOVS r3, #111       // 'o'
+    MOVS r4, #0
+    LSLS r3, r3, #8
+    ORRS r3, r3, r4
+    LSLS r3, r3, #16
+    STR  r3, [r2]
+    SUBS r2, r2, #4
+    MOVS r3, #1
+    BL   i2c_draw_text
     main_loop:
-        ADDS r0, r0, #1
+        //ADDS r0, r0, #1
+        //MOVS r0, r4
+        //BL   clear_oled_framebuffer
+        BL   i2c_display_framebuffer_try2
+        //BL   i2c_display_framebuffer
+        //LDR  r3, =0x000001F4
+        //BL   delay_ms
+        //MVNS r4, r4
+        //MOVS r0, r4
+        //BL   clear_oled_framebuffer
         B    main_loop
 .size main, .-main
