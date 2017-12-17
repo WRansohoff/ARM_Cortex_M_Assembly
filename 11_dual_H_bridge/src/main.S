@@ -1,12 +1,12 @@
 /*
- * Test program to use a CAT24AA16 EEPROM chip over I2C.
+ * Test program to drive 2 DC motors through an L293D
+ * dual H-bridge chip.
  *
  * Copyright William Ransohoff, Vivonomicon, LLC, 2017
  *
  * Open source under the MIT License
  */
 
-// The linker should set these, but you never know.
 .syntax unified
 #ifdef VVC_F0
     .cpu cortex-m0plus
@@ -102,8 +102,8 @@ main:
     MOVS r3, #7
     BL   init_gpio_pin
 
-    // Main loop - just read the same byte from EEPROM.
-    // (Mark end of execution.)
+    // Main loop - read the buttons and drive the motors.
+    // (Mark end of loading stuff.)
     LDR  r7, =0xF00D
     main_loop:
         // 50ms delay
